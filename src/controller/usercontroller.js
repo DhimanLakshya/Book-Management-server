@@ -120,3 +120,15 @@ exports.ResetPassword = async (req, res) => {
       }
       catch (err) { return errorhandle(err, res) }
 }
+
+exports.getAllUserData = async(req,res)=>{
+   try{
+
+      const data = await UserModel.find()
+
+      return res.status(200).send({ status: true, msg: "Successfully Otp Send",data:data })
+
+   }
+   catch (err) { return errorhandle(err, res) }
+
+}
