@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
     userotp: { type: String, required: false, trim: true },
     resetotp: { type: String, required: false, trim: true },
     Address: { type: String, required: [true, 'please enter your Adderss'], trim: true },
-    Institute_Name: { type: String, required: [true, 'please enter your Adderss'], trim: true },
+    Institute_Name: { type: String, required: [true, 'please enter your Instiyute name'], trim: true },
     isverify: { type: String, default: false, trim: true },
     isdeleted: { type: String, required: false, trim: true },
 }, { timestamp: true })

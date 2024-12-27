@@ -4,6 +4,7 @@ module.exports.Validphone=(phone)=>{
 }
 module.exports.ValidAadhaar=(aadhar)=>{
     const aadharRegex=/^[1-9]\d{11}$/;
+    // console.log(aadharRegex.test(aadhar));
     return aadharRegex.test(aadhar)
 }
 module.exports.ValidName = (Name)=>{
@@ -18,6 +19,6 @@ module.exports.Validemail = (email)=>{
 
 module.exports.Validpass = (pass)=>{
     const passwordRegex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-    console.log('hi',passwordRegex.test(pass));
+    
     return passwordRegex.test(pass)
 }

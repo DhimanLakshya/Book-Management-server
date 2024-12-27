@@ -1,7 +1,7 @@
 const { errorhandle } = require('../errorhandling/errorhandling');
 const UserModel = require('../models/usermodel');
 const jwt = require('jsonwebtoken');
-const { OTPSender, ResetOTP } = require('../nodemailer/mailSender')
+const { OTPSender, ResetOTP } = require('../nodEmailer/mailSender')
 const bcrypt = require('bcrypt');
 const usermodel = require('../models/usermodel');
 require('dotenv').config()
@@ -9,21 +9,20 @@ require('dotenv').config()
 module.exports.createuser = async (req, res) => {
    try {
       const data = req.body
-      const { email, name,password } = data
-      if(Object.keys(data).length==0) return res.status(400).send({ status: false, msg: 'can not send Empty body pls Provided User Data' })
-      if(!password) return res.status(400).send({ status: false, msg: 'Pls Provided password' })
+      const { Email, First_Name, Last_Name} = data;
 
       let randomOtp = Math.floor(1000 + Math.random() * 9000);
       data.userotp = randomOtp
 
       const existingUser = await UserModel.findOneAndUpdate(
-         { email: data.email },
+         { Email: data.Email },
          { $set: { userotp: randomOtp } }
       );
+
       if (existingUser) {
          if (existingUser.isverify == true) { return res.status(200).send({ status: false, msg: ' Already verified User Please login' }) }
          
-         OTPSender(email, name, randomOtp)
+         OTPSender(Email, First_Name, randomOtp)
          return res.status(200).send({ status: true, msg: "Successfully Otp Send", id: existingUser._id })
          
       }
@@ -32,17 +31,11 @@ module.exports.createuser = async (req, res) => {
       data.password = BcryptPass;
       data.role = 'User'
 
-      const address = {
-         street: data.street,
-         city: data.city,
-         pincode: data.pincode
-      }
-
-      req.body.address = address
 
       //creating data into database
       const createdUser = await UserModel.create(data)
-      OTPSender(email, data.name, randomOtp)
+      // console.log(createdUser);
+      OTPSender(Email, data.First_Name,Last_Name, randomOtp)
 
       // console.log(data);//printing datarecieved from postman
 
@@ -76,9 +69,9 @@ module.exports.LoginUser = async (req, res) => {
       const data = req.body
       // console.log(data);
       if (data.password == undefined) { return res.status(400).send({ status: false, msg: 'Please Provide Password' }) }
-      if (data.email == undefined) { return res.status(400).send({ status: false, msg: 'Please Provide Email' }) }
+      if (data.Email == undefined) { return res.status(400).send({ status: false, msg: 'Please Provide Email' }) }
 
-      const checkMailId = await usermodel.findOne({ email: data.email, role: 'User', isverify: true })
+      const checkMailId = await usermodel.findOne({ Email: data.Email, role: 'User', isverify: true })
 
       if (!checkMailId) { return res.status(400).send({ status: false, msg: 'User Not Found,Please Signup and Verify Otp' }) }
 
@@ -88,7 +81,7 @@ module.exports.LoginUser = async (req, res) => {
 
       const CustomerId = checkMailId._id.toString();
 
-      const userToken = jwt.sign({ Userid: CustomerId, Username: checkMailId.name }, process.env.UserTokenKey, { expiresIn: '12h' })
+      const userToken = jwt.sign({ Userid: CustomerId, UserFirst_Name: checkMailId.First_Name,UserLast_Name: checkMailId.Last_Name }, process.env.UserTokenKey, { expiresIn: '12h' })
 
       return res.status(200).send({ status: true, msg: "Sucessfully Created Token", UserId: CustomerId, Token: userToken })
    }
@@ -97,13 +90,13 @@ module.exports.LoginUser = async (req, res) => {
 
 exports.ResetPassword = async (req, res) => {
    try {
-      const email = req.body.email;
+      const Email = req.body.Email;
 
       let randomOtp = Math.floor(1000 + Math.random() * 9000);
       req.body.resetotp = randomOtp;
 
       const CheckEmailId = await UserModel.findOneAndUpdate(
-         { email: email },
+         { Email: Email },
          { $set: { resetotp: randomOtp } }
       );
       if (!CheckEmailId) { return res.status(404).send({ status: false, msg: 'User not found pls SignUp' }) }
@@ -111,8 +104,8 @@ exports.ResetPassword = async (req, res) => {
       if (CheckEmailId) {
          if ((CheckEmailId.isverify) == 'true') { return res.status(200).send({ status: false, msg: ' Already verified User Please login' }) }
       }
-      const name = CheckEmailId.name
-         ResetOTP(email, name, randomOtp)
+      const First_Name = CheckEmailId.First_Name
+         ResetOTP(Email, First_Name, randomOtp)
          const resetpass = jwt.sign({ Userid: CheckEmailId._id,data:CheckEmailId}, process.env.resetPassTokenKey, { expiresIn: '5m' })
 
          return res.status(200).send({ status: true, msg: "Successfully Otp Send",id:CheckEmailId._id, token : resetpass })
