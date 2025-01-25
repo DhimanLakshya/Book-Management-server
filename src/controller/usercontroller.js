@@ -1,14 +1,17 @@
 const { errorhandle } = require('../errorhandling/errorhandling');
-const UserModel = require('../models/usermodel');
 const jwt = require('jsonwebtoken');
+const UserModel = require('../models/usermodel');
 const { OTPSender, ResetOTP } = require('../nodEmailer/mailSender')
-const bcrypt = require('bcrypt');
 const usermodel = require('../models/usermodel');
+const bcrypt = require('bcrypt');
+const {userprofileimg}=require("../Cloudinary/uploadimages")
 require('dotenv').config()
 
 module.exports.createuser = async (req, res) => {
    try {
-      const data = req.body
+      const data = req.body;
+      const profileimg=req.file;
+
       const { Email, First_Name, Last_Name} = data;
 
       let randomOtp = Math.floor(1000 + Math.random() * 9000);
@@ -25,6 +28,11 @@ module.exports.createuser = async (req, res) => {
          OTPSender(Email, First_Name, randomOtp)
          return res.status(200).send({ status: true, msg: "Successfully Otp Send", id: existingUser._id })
          
+      }
+
+      if(profileimg){
+         const imgURL=await userprofileimg(profileimg.path);
+         data.profileimg=imgURL
       }
       
       const BcryptPass = await bcrypt.hash(data.password, 10);
